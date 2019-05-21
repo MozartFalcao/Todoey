@@ -18,7 +18,7 @@ class TodoListViewController: UITableViewController {
     //using coredata
     //var itemArray = [Item]()
     
-    var itemResults: Results<Item>?
+    var todoItems: Results<Item>?
     var realm = try! Realm()
     
     
@@ -57,7 +57,7 @@ class TodoListViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
         
-        if let itemRow = itemResults?[indexPath.row]
+        if let itemRow = todoItems?[indexPath.row]
         {
             cell.textLabel?.text = itemRow.title
             
@@ -89,7 +89,7 @@ class TodoListViewController: UITableViewController {
     // the number of rows in a tableview
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
     {
-        return itemResults?.count ?? 1
+        return todoItems?.count ?? 1
         
     }
     
@@ -129,7 +129,7 @@ class TodoListViewController: UITableViewController {
         //        saveItems()
         
         //using Realm
-        if let item = itemResults?[indexPath.row]
+        if let item = todoItems?[indexPath.row]
         {
             do
             {
@@ -187,6 +187,7 @@ class TodoListViewController: UITableViewController {
                         
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.dateCreated = Date()
                         currentCategory.items.append(newItem)
                     }
                     
@@ -258,7 +259,7 @@ class TodoListViewController: UITableViewController {
         //            print("Error fetching data from context \(error)")
         //        }
         
-        itemResults = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         
         tableView.reloadData()
         
@@ -305,9 +306,15 @@ class TodoListViewController: UITableViewController {
 //MARK: - Searchbar methods
 
 //how to create a extesion from another class delegate.
-//extension TodoListViewController: UISearchBarDelegate
-//{
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+extension TodoListViewController: UISearchBarDelegate
+{
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+      
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: false)
+        
+        
+        
+//        //using coredata
 //        let request : NSFetchRequest<Item> = Item.fetchRequest()
 //
 //        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
@@ -316,25 +323,25 @@ class TodoListViewController: UITableViewController {
 //        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 //
 //        loadItems(with:request, predicate: NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!))
-//
-//    }
-//
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//
-//        if searchBar.text?.count == 0 {
-//
-//            loadItems()
-//
-//            //manages the execution of work itens. Threds
-//            DispatchQueue.main.async {
-//                //go to original state before the searchbar was activated
-//                searchBar.resignFirstResponder()
-//
-//            }
-//
-//
-//        }
-//
-//    }
-//
-//}
+
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+
+        if searchBar.text?.count == 0 {
+
+            loadItems()
+
+            //manages the execution of work itens. Threds
+            DispatchQueue.main.async {
+                //go to original state before the searchbar was activated
+                searchBar.resignFirstResponder()
+
+            }
+
+
+        }
+
+    }
+
+}
