@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class TodoListViewController: SwipeTableViewController {
     
@@ -20,6 +21,8 @@ class TodoListViewController: SwipeTableViewController {
     
     var realm = try! Realm()
     var todoItems: Results<Item>?
+    
+    @IBOutlet weak var searchBar: UISearchBar!
     
     //didset - trigger that starts before the variable is set.
     var selectedCategory : Category? {
@@ -44,14 +47,61 @@ class TodoListViewController: SwipeTableViewController {
         //            itemArray = items
         //        }
         
+        
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+
+        title = selectedCategory?.name
+
+        guard let colourHex = selectedCategory?.colour else {fatalError()}
+        updateNavBar(withHexCode: colourHex)
+        
+        
+        
+        
+        
+        
+        
+    }
+    
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        
+        guard let originalColour = UIColor(hexString: "1D9BF6") else {fatalError()}
+        
+        updateNavBar(withHexCode: "1D9BF6")
+        
+        navigationController?.navigationBar.barTintColor = originalColour
+        navigationController?.navigationBar.tintColor = FlatWhite()
+        navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: FlatWhite()]
+        
+        
+    }
+    //MARK: - NAV Bar Setup Methods
+    
+    func updateNavBar(withHexCode colourHexCode: String)
+    {
+        guard let navBar = navigationController?.navigationBar else {fatalError("Navigation controller does not exists")}
+        
+        
+        guard let navBarColor = UIColor(hexString: colourHexCode) else {fatalError()}
+        
+        navBar.barTintColor = navBarColor
+        navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+        navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: ContrastColorOf(navBarColor, returnFlat: true)]
+        searchBar.barTintColor = navBarColor
+
+        
+
     }
     
     
     //MARK: - Tableview DataSource Methods
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
-    
+        
         //let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
@@ -64,6 +114,26 @@ class TodoListViewController: SwipeTableViewController {
             //Ternary operator ==>
             // value = condition ? valueIfTrue : valueIfFalse
             cell.accessoryType = itemRow.done ? .checkmark : .none
+            
+            //ATTENTION HERE, WHEN WE CONVERT INT TO CGGFLOAT THE CONVERTION ROUNDED THE RESULT, SO YOU NEED TO CONVERT
+            //EACH NUMBER BEFORE THE CALCULATION.
+            
+            //var selectedColour = self.selectedCategory?.backgroundCellColor
+            //if let colour = FlatSkyBlue().darken(byPercentage:  CGFloat(indexPath.row) / CGFloat(todoItems!.count))
+            if let colour = UIColor(hexString: selectedCategory!.colour)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count))
+            {
+                cell.backgroundColor = colour
+                cell.textLabel?.textColor = ContrastColorOf(colour, returnFlat: true)
+                
+            }
+            
+            
+            
+            
+            
+            
+            
+            
             
         }
         else
@@ -92,6 +162,7 @@ class TodoListViewController: SwipeTableViewController {
         return todoItems?.count ?? 1
         
     }
+    
     
     
     //MARK: - TableView Delegate Methods
@@ -196,7 +267,7 @@ class TodoListViewController: SwipeTableViewController {
                     print("Error saving new items \(error)")
                 }
                 
-             self.tableView.reloadData()
+                self.tableView.reloadData()
                 
             }
             
@@ -259,7 +330,7 @@ class TodoListViewController: SwipeTableViewController {
         //            print("Error fetching data from context \(error)")
         //        }
         
-        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: false)
         
         tableView.reloadData()
         
@@ -321,40 +392,42 @@ class TodoListViewController: SwipeTableViewController {
 extension TodoListViewController: UISearchBarDelegate
 {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-      
+        
         todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: false)
         
         tableView.reloadData()
         
-//        //using coredata
-//        let request : NSFetchRequest<Item> = Item.fetchRequest()
-//
-//        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//
-//        //line to sort the results
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//
-//        loadItems(with:request, predicate: NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!))
+        //        //using coredata
+        //        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        //
+        //        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        //
+        //        //line to sort the results
+        //        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        //
+        //        loadItems(with:request, predicate: NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!))
         
-
+        
     }
-
+    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-
+        
         if searchBar.text?.count == 0 {
-
+            
             loadItems()
-
+            
             //manages the execution of work itens. Threds
             DispatchQueue.main.async {
                 //go to original state before the searchbar was activated
                 searchBar.resignFirstResponder()
-
+                
             }
-
-
+            
+            
         }
-
+        
     }
-
+    
+    
+    
 }
