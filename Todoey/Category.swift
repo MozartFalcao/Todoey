@@ -12,7 +12,10 @@ import RealmSwift
 class Category: Object {
 
     @objc dynamic var name: String = ""
+    @objc dynamic var backgroundCellColor : String = ""
+    
     let items = List<Item>()
+    //var backgroundCellColor : String = ""
     
     
 }

@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
     
     
     //var itemArray = ["Find Mike", "Buy Eggos","Destroy Demogorgon"]
@@ -18,9 +18,8 @@ class TodoListViewController: UITableViewController {
     //using coredata
     //var itemArray = [Item]()
     
-    var todoItems: Results<Item>?
     var realm = try! Realm()
-    
+    var todoItems: Results<Item>?
     
     //didset - trigger that starts before the variable is set.
     var selectedCategory : Category? {
@@ -45,16 +44,17 @@ class TodoListViewController: UITableViewController {
         //            itemArray = items
         //        }
         
-        
     }
     
     
     //MARK: - Tableview DataSource Methods
     
-    //how to add a array on tableview cells ...
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+    
+        //let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         
         if let itemRow = todoItems?[indexPath.row]
@@ -300,7 +300,19 @@ class TodoListViewController: UITableViewController {
     //        }
     //    }
     
-    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let itemForDeletion = self.todoItems?[indexPath.row]
+        {
+            do{
+                try self.realm.write {
+                    self.realm.delete(itemForDeletion)
+                }
+            }catch{
+                print("Error deleting item \(error)")
+            }
+        }
+    }
 }
 
 //MARK: - Searchbar methods
@@ -312,8 +324,8 @@ extension TodoListViewController: UISearchBarDelegate
       
         todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: false)
         
-        
         tableView.reloadData()
+        
 //        //using coredata
 //        let request : NSFetchRequest<Item> = Item.fetchRequest()
 //
@@ -323,6 +335,7 @@ extension TodoListViewController: UISearchBarDelegate
 //        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 //
 //        loadItems(with:request, predicate: NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!))
+        
 
     }
 
