@@ -313,7 +313,7 @@ extension TodoListViewController: UISearchBarDelegate
         todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: false)
         
         
-        
+        tableView.reloadData()
 //        //using coredata
 //        let request : NSFetchRequest<Item> = Item.fetchRequest()
 //
